@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Luma Attendee Scraper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .code-block {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .instructions {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Luma Attendee Scraper</h1>
+    <div class="container">
+        <div class="instructions">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Go to the Luma event page (e.g., https://lu.ma/5rfo4ti4)</li>
+                <li>Click the "Going" button to open the attendee list popup</li>
+                <li>Open your browser's Developer Tools (F12 or right-click -> Inspect)</li>
+                <li>Go to the Console tab</li>
+                <li>Copy and paste the code below into the console</li>
+                <li>Press Enter to run the code</li>
+                <li>A CSV file will be automatically downloaded</li>
+            </ol>
+        </div>
+
+        <p>Copy this code and paste it into your browser's console:</p>
+        <div class="code-block" id="codeBlock">// Find all attendee elements
+const attendeeElements = document.querySelectorAll('div.flex-center.gap-2.spread');
+
+if (attendeeElements.length === 0) {
+    console.log('No attendees found. Make sure you have opened the attendee list popup first!');
+} else {
+    console.log(`Found ${attendeeElements.length} attendees`);
+    
+    // Create CSV content
+    let csv = 'Luma Username,X.com Link\n';
+    
+    // Process each attendee
+    attendeeElements.forEach(attendee => {
+        try {
+            // Get Luma username
+            const lumaLink = attendee.querySelector('a');
+            const lumaUsername = lumaLink ? lumaLink.textContent.trim() : 'N/A';
+            
+            // Try different selectors for X.com link
+            let xLinkUrl = 'N/A';
+            
+            // Try direct X.com link
+            const xLink = attendee.querySelector('a[href*="twitter.com"], a[href*="x.com"]');
+            if (xLink) {
+                xLinkUrl = xLink.href;
+            } else {
+                // Try finding social links container
+                const socialLinks = attendee.querySelector('div.social-links, div[class*="social"]');
+                if (socialLinks) {
+                    const xLinkInSocial = socialLinks.querySelector('a[href*="twitter.com"], a[href*="x.com"]');
+                    if (xLinkInSocial) {
+                        xLinkUrl = xLinkInSocial.href;
+                    }
+                }
+            }
+            
+            // Add to CSV
+            csv += `"${lumaUsername}","${xLinkUrl}"\n`;
+            
+            // Log to console
+            console.log(`${lumaUsername} - ${xLinkUrl}`);
+        } catch (e) {
+            console.error('Error processing attendee:', e);
+        }
+    });
+    
+    // Download CSV
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'luma_attendees.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}</div>
+        <button onclick="copyCode()">Copy Code</button>
+    </div>
+
+    <script>
+        function copyCode() {
+            const codeBlock = document.getElementById('codeBlock');
+            const textArea = document.createElement('textarea');
+            textArea.value = codeBlock.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('Code copied to clipboard!');
+        }
+    </script>
+</body>
+</html> 
